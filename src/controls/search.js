@@ -1,34 +1,34 @@
-import Awesomplete from 'awesomplete';
-import Point from 'ol/geom/Point';
-import Overlay from 'ol/Overlay';
+import Awesomplete from "awesomplete";
+import Point from "ol/geom/Point";
+import Overlay from "ol/Overlay";
 
-import Infowindow from '../components/infowindow';
-import getCenter from '../geometry/getcenter';
-import getAttributes from '../getattributes';
-import getFeature from '../getfeature';
-import {listExportHandler} from '../infowindow_exporthandler';
-import mapUtils from '../maputils';
-import popup from '../popup';
+import Infowindow from "../components/infowindow";
+import getCenter from "../geometry/getcenter";
+import getAttributes from "../getattributes";
+import getFeature from "../getfeature";
+import { listExportHandler } from "../infowindow_exporthandler";
+import mapUtils from "../maputils";
+import popup from "../popup";
 import {
   Button,
   Collapse,
   CollapseHeader,
   Component,
   dom,
-  Element as El
-} from '../ui';
-import utils from '../utils';
-import generateUUID from '../utils/generateuuid';
+  Element as El,
+} from "../ui";
+import utils from "../utils";
+import generateUUID from "../utils/generateuuid";
 
 const Search = function Search(options = {}) {
   const keyCodes = {
-    9 : 'tab',
-    27 : 'esc',
-    37 : 'left',
-    39 : 'right',
-    13 : 'enter',
-    38 : 'up',
-    40 : 'down'
+    9: "tab",
+    27: "esc",
+    37: "left",
+    39: "right",
+    13: "enter",
+    38: "up",
+    40: "down",
   };
 
   let {
@@ -47,15 +47,15 @@ const Search = function Search(options = {}) {
     maxZoomLevel,
     limit,
     hintText,
-    minLength
+    minLength,
   } = options;
 
   const {
     geometryAttribute,
     url,
-    queryParameterName = 'q',
+    queryParameterName = "q",
     autocompletePlacement,
-    searchlistOptions = {}
+    searchlistOptions = {},
   } = options;
 
   const searchlistPlacement = searchlistOptions.placement;
@@ -85,21 +85,22 @@ const Search = function Search(options = {}) {
     obj.title = objTitle;
     obj.content = content;
     clear();
-    featureInfo.render([ obj ], 'overlay', getCenter(features[0].getGeometry()),
-                       {ignorePan : true});
+    featureInfo.render([obj], "overlay", getCenter(features[0].getGeometry()), {
+      ignorePan: true,
+    });
     viewer.zoomToExtent(features[0].getGeometry(), maxZoomLevel);
   }
 
   function showOverlay(data, coord) {
     clear();
     const newPopup = popup(`#${viewer.getId()}`);
-    overlay = new Overlay({element : newPopup.getEl()});
+    overlay = new Overlay({ element: newPopup.getEl() });
 
     map.addOverlay(overlay);
 
     overlay.setPosition(coord);
     const content = data[name];
-    newPopup.setContent({content, title});
+    newPopup.setContent({ content, title });
     newPopup.setVisibility(true);
     viewer.zoomToExtent(new Point(coord), maxZoomLevel);
   }
@@ -138,12 +139,17 @@ const Search = function Search(options = {}) {
         let featureWkt;
         let coordWkt;
         if (res.length > 0) {
-          showFeatureInfo(res, layer.get('title'),
-                          getAttributes(res[0], layer, map));
+          showFeatureInfo(
+            res,
+            layer.get("title"),
+            getAttributes(res[0], layer, map),
+          );
         } else if (geometryAttribute) {
           // Fallback if no geometry in response
-          featureWkt =
-              mapUtils.wktToFeature(data[geometryAttribute], projectionCode);
+          featureWkt = mapUtils.wktToFeature(
+            data[geometryAttribute],
+            projectionCode,
+          );
           coordWkt = featureWkt.getGeometry().getCoordinates();
           showOverlay(data, coordWkt);
         }
@@ -151,23 +157,26 @@ const Search = function Search(options = {}) {
     } else if (geometryAttribute && layerName) {
       feature = mapUtils.wktToFeature(data[geometryAttribute], projectionCode);
       layer = viewer.getLayer(data[layerName]);
-      showFeatureInfo([ feature ], layer.get('title'),
-                      getAttributes(feature, layer, map));
+      showFeatureInfo(
+        [feature],
+        layer.get("title"),
+        getAttributes(feature, layer, map),
+      );
     } else if (titleAttribute && contentAttribute && geometryAttribute) {
       feature = mapUtils.wktToFeature(data[geometryAttribute], projectionCode);
 
       // Make sure the response is wrapped in a html element
-      content = utils.createElement('div', data[contentAttribute]);
-      showFeatureInfo([ feature ], data[titleAttribute], content);
+      content = utils.createElement("div", data[contentAttribute]);
+      showFeatureInfo([feature], data[titleAttribute], content);
     } else if (geometryAttribute && title) {
       feature = mapUtils.wktToFeature(data[geometryAttribute], projectionCode);
-      content = utils.createElement('div', data[name]);
-      showFeatureInfo([ feature ], title, content);
+      content = utils.createElement("div", data[name]);
+      showFeatureInfo([feature], title, content);
     } else if (easting && northing && title) {
-      coord = [ data[easting], data[northing] ];
+      coord = [data[easting], data[northing]];
       showOverlay(data, coord);
     } else {
-      console.error('Search options are missing');
+      console.error("Search options are missing");
     }
   }
 
@@ -181,87 +190,111 @@ const Search = function Search(options = {}) {
     });
   }
 
-  function clearSearchResults() { setSearchDb([]); }
+  function clearSearchResults() {
+    setSearchDb([]);
+  }
 
   function clearAll() {
     clearSearchResults();
     clear();
-    document.getElementById(`${containerElement.getId()}`)
-        .classList.remove('o-search-true');
-    document.getElementById(`${containerElement.getId()}`)
-        .classList.add('o-search-false');
-    document.getElementsByClassName('o-search-field')[0].value = '';
+    document
+      .getElementById(`${containerElement.getId()}`)
+      .classList.remove("o-search-true");
+    document
+      .getElementById(`${containerElement.getId()}`)
+      .classList.add("o-search-false");
+    document.getElementsByClassName("o-search-field")[0].value = "";
     document.getElementById(`${searchButton.getId()}`).blur();
-    document.getElementsByClassName('o-search-field')[0].blur();
+    document.getElementsByClassName("o-search-field")[0].blur();
   }
 
   function onClearSearch() {
-    document.getElementById(`${closeButton.getId()}`)
-        .addEventListener('click', () => { clearAll(); });
+    document
+      .getElementById(`${closeButton.getId()}`)
+      .addEventListener("click", () => {
+        clearAll();
+      });
   }
 
   function bindUIActions() {
-    document.getElementById('hjl').addEventListener(
-        'awesomplete-selectcomplete', selectHandler);
+    document
+      .getElementById("hjl")
+      .addEventListener("awesomplete-selectcomplete", selectHandler);
 
-    document.getElementsByClassName('o-search-field')[0].addEventListener(
-        'input', () => {
-          if (document.getElementsByClassName('o-search-field')[0].value &&
-              document.getElementById(`${containerElement.getId()}`)
-                  .classList.contains('o-search-false')) {
-            document.getElementById(`${containerElement.getId()}`)
-                .classList.remove('o-search-false');
-            document.getElementById(`${containerElement.getId()}`)
-                .classList.add('o-search-true');
-            onClearSearch();
-          } else if (!(document.getElementsByClassName('o-search-field')[0]
-                           .value) &&
-                     document.getElementById(`${containerElement.getId()}`)
-                         .classList.contains('o-search-true')) {
-            document.getElementById(`${containerElement.getId()}`)
-                .classList.remove('o-search-true');
-            document.getElementById(`${containerElement.getId()}`)
-                .classList.add('o-search-false');
-          }
-        });
+    document
+      .getElementsByClassName("o-search-field")[0]
+      .addEventListener("input", () => {
+        if (
+          document.getElementsByClassName("o-search-field")[0].value &&
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.contains("o-search-false")
+        ) {
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.remove("o-search-false");
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.add("o-search-true");
+          onClearSearch();
+        } else if (
+          !document.getElementsByClassName("o-search-field")[0].value &&
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.contains("o-search-true")
+        ) {
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.remove("o-search-true");
+          document
+            .getElementById(`${containerElement.getId()}`)
+            .classList.add("o-search-false");
+        }
+      });
 
-    document.getElementsByClassName('o-search-field')[0].addEventListener(
-        'blur', () => {
-          document.getElementById(`${wrapperElement.getId()}`)
-              .classList.remove('active');
-          window.dispatchEvent(new CustomEvent('resize'));
-        });
-    document.getElementsByClassName('o-search-field')[0].addEventListener(
-        'focus', () => {
-          document.getElementById(`${wrapperElement.getId()}`)
-              .classList.add('active');
-          awesomplete.evaluate();
-          window.dispatchEvent(new CustomEvent('resize'));
-        });
+    document
+      .getElementsByClassName("o-search-field")[0]
+      .addEventListener("blur", () => {
+        document
+          .getElementById(`${wrapperElement.getId()}`)
+          .classList.remove("active");
+        window.dispatchEvent(new CustomEvent("resize"));
+      });
+    document
+      .getElementsByClassName("o-search-field")[0]
+      .addEventListener("focus", () => {
+        document
+          .getElementById(`${wrapperElement.getId()}`)
+          .classList.add("active");
+        awesomplete.evaluate();
+        window.dispatchEvent(new CustomEvent("resize"));
+      });
   }
 
   function renderList(suggestion, input) {
     const item = searchDb[suggestion.label] || {};
     const header =
-        'header' in item ? `<div class="heading">${item.header}</div>` : '';
+      "header" in item ? `<div class="heading">${item.header}</div>` : "";
     let opts = {};
-    let html = input === ''
-                   ? suggestion.value
-                   : suggestion.value.replace(
-                         RegExp(Awesomplete.$.regExpEscape(input), 'gi'),
-                         '<mark>$&</mark>');
+    let html =
+      input === ""
+        ? suggestion.value
+        : suggestion.value.replace(
+            RegExp(Awesomplete.$.regExpEscape(input), "gi"),
+            "<mark>$&</mark>",
+          );
     html = `${header}<div class="suggestion">${html}</div>`;
-    opts = {innerHTML : html, 'aria-selected' : 'false'};
-    if ('header' in item) {
-      opts.className = 'header';
+    opts = { innerHTML: html, "aria-selected": "false" };
+    if ("header" in item) {
+      opts.className = "header";
     }
 
-    return Awesomplete.$.create('li', opts);
+    return Awesomplete.$.create("li", opts);
   }
 
   function dbToList() {
     const items = Object.keys(searchDb);
-    return items.map(item => searchDb[item]);
+    return items.map((item) => searchDb[item]);
   }
 
   function groupDb(data) {
@@ -271,9 +304,9 @@ const Search = function Search(options = {}) {
       const item = data[id];
       let typeTitle;
       if (layerNameAttribute && idAttribute) {
-        typeTitle = viewer.getLayer(item[layerNameAttribute]).get('title');
+        typeTitle = viewer.getLayer(item[layerNameAttribute]).get("title");
       } else if (geometryAttribute && layerName) {
-        typeTitle = viewer.getLayer(item[layerName]).get('title');
+        typeTitle = viewer.getLayer(item[layerName]).get("title");
       } else if (titleAttribute && contentAttribute && geometryAttribute) {
         typeTitle = item[titleAttribute];
       } else if (geometryAttribute && title) {
@@ -288,7 +321,7 @@ const Search = function Search(options = {}) {
       if (typeTitle) {
         group[typeTitle].push(item);
       } else if (id === 0) {
-        console.error('Search options are missing');
+        console.error("Search options are missing");
       }
     });
     return group;
@@ -322,8 +355,9 @@ const Search = function Search(options = {}) {
       groupList();
     }
     list = Object.keys(selection).reduce(
-        (previous, currentGroup) => previous.concat(selection[currentGroup]),
-        []);
+      (previous, currentGroup) => previous.concat(selection[currentGroup]),
+      [],
+    );
     return list;
   }
 
@@ -337,22 +371,22 @@ const Search = function Search(options = {}) {
   */
 
   function initAutocomplete() {
-    const input = document.getElementsByClassName('o-search-field')[0];
+    const input = document.getElementsByClassName("o-search-field")[0];
     const mapEl = viewer.getMap().getTargetElement();
     const listHeight = mapEl.offsetHeight / 2;
 
-    awesomplete = new Awesomplete('.o-search-field', {
-      minChars : minLength,
-      autoFirst : false,
-      sort : false,
-      maxItems : limit,
-      item : renderList,
+    awesomplete = new Awesomplete(".o-search-field", {
+      minChars: minLength,
+      autoFirst: false,
+      sort: false,
+      maxItems: limit,
+      item: renderList,
       filter(suggestion, userInput) {
-        const {value : suggestionValue} = suggestion;
+        const { value: suggestionValue } = suggestion;
         return suggestionValue.toLowerCase().includes(userInput.toLowerCase())
-                   ? suggestionValue
-                   : false;
-      }
+          ? suggestionValue
+          : false;
+      },
     });
     awesomplete.ul.style.maxHeight = `${listHeight}px`;
 
@@ -372,39 +406,46 @@ const Search = function Search(options = {}) {
       Object.keys(result).forEach((layername) => {
         const resultArray = result[layername];
         if (viewer.getLayer(layername)) {
-          const layertitle = `${viewer.getLayer(layername).get('title')} (${
-              resultArray.length})`;
+          const layertitle = `${viewer.getLayer(layername).get("title")} (${
+            resultArray.length
+          })`;
           const rows = [];
           if (searchlistOptions.makeSelectionButton) {
-            const ids = resultArray.map(item => item[idAttribute]);
-            const buttonText = searchlistOptions.makeSelectionButtonText ||
-                               'Gör urval i kartan';
-            const makeSelectionButton =
-                Button({cls : 'export-button', text : buttonText});
+            const ids = resultArray.map((item) => item[idAttribute]);
+            const buttonText =
+              searchlistOptions.makeSelectionButtonText || "Gör urval i kartan";
+            const makeSelectionButton = Button({
+              cls: "export-button",
+              text: buttonText,
+            });
             const makeSelection = Component({
               addClick() {
-                document.getElementById(makeSelectionButton.getId())
-                    .addEventListener('click', () => {
-                      const source = viewer.getMapSource();
-                      const projCode = viewer.getProjectionCode();
-                      const proj = viewer.getProjection();
-                      const layer = viewer.getLayer(layername);
-                      getFeature(ids.join(), layer, source, projCode, proj)
-                          .then((res) => {
-                            if (res.length > 0) {
-                              const featLayerName = layer.get('name');
-                              featureInfo.showFeatureInfo(
-                                  {feature : res, layerName : featLayerName},
-                                  {maxZoomLevel});
-                            }
-                          });
-                    });
+                document
+                  .getElementById(makeSelectionButton.getId())
+                  .addEventListener("click", () => {
+                    const source = viewer.getMapSource();
+                    const projCode = viewer.getProjectionCode();
+                    const proj = viewer.getProjection();
+                    const layer = viewer.getLayer(layername);
+                    getFeature(ids.join(), layer, source, projCode, proj).then(
+                      (res) => {
+                        if (res.length > 0) {
+                          const featLayerName = layer.get("name");
+                          featureInfo.showFeatureInfo(
+                            { feature: res, layerName: featLayerName },
+                            { maxZoomLevel },
+                          );
+                        }
+                      },
+                    );
+                  });
               },
-              onInit() { this.addComponent(makeSelectionButton); },
+              onInit() {
+                this.addComponent(makeSelectionButton);
+              },
               render() {
-                return `<li class="flex row text-smaller align-center padding-x padding-y-smaller hover pointer" id="${
-                    this.getId()}">${makeSelectionButton.render()}</li>`;
-              }
+                return `<li class="flex row text-smaller align-center padding-x padding-y-smaller hover pointer" id="${this.getId()}">${makeSelectionButton.render()}</li>`;
+              },
             });
             rows.push(makeSelection);
           }
@@ -412,89 +453,99 @@ const Search = function Search(options = {}) {
           resultArray.forEach((element) => {
             const row = Component({
               addClick() {
-                document.getElementById(this.getId())
-                    .addEventListener('click', () => {
-                      const source = viewer.getMapSource();
-                      const projCode = viewer.getProjectionCode();
-                      const proj = viewer.getProjection();
-                      const layer = viewer.getLayer(layername);
-                      const id = element[idAttribute];
-                      getFeature(id, layer, source, projCode, proj)
-                          .then((res) => {
-                            if (res.length > 0) {
-                              const featureLayerName = layer.get('name');
-                              featureInfo.showFeatureInfo(
-                                  {feature : res, layerName : featureLayerName},
-                                  {maxZoomLevel});
-                            }
-                          });
-                    });
+                document
+                  .getElementById(this.getId())
+                  .addEventListener("click", () => {
+                    const source = viewer.getMapSource();
+                    const projCode = viewer.getProjectionCode();
+                    const proj = viewer.getProjection();
+                    const layer = viewer.getLayer(layername);
+                    const id = element[idAttribute];
+                    getFeature(id, layer, source, projCode, proj).then(
+                      (res) => {
+                        if (res.length > 0) {
+                          const featureLayerName = layer.get("name");
+                          featureInfo.showFeatureInfo(
+                            { feature: res, layerName: featureLayerName },
+                            { maxZoomLevel },
+                          );
+                        }
+                      },
+                    );
+                  });
               },
               onInit() {
-                this.addComponent(El({
-                  cls : 'flex row align-center padding-left padding-right item',
-                  tagName : 'div',
-                  innerHTML : `${element[name]}`
-                }));
+                this.addComponent(
+                  El({
+                    cls: "flex row align-center padding-left padding-right item",
+                    tagName: "div",
+                    innerHTML: `${element[name]}`,
+                  }),
+                );
               },
               render() {
                 const content = this.getComponents().reduce((acc, item) => {
                   const rendered = item.render();
                   return acc + rendered;
-                }, '');
-                return `<li class="flex row text-smaller align-center padding-x padding-y-smaller hover pointer" id="${
-                    this.getId()}">${content}</li>`;
-              }
+                }, "");
+                return `<li class="flex row text-smaller align-center padding-x padding-y-smaller hover pointer" id="${this.getId()}">${content}</li>`;
+              },
             });
             rows.push(row);
           });
 
           const contentComponent = Component({
-            onInit() { this.addComponents(rows); },
+            onInit() {
+              this.addComponents(rows);
+            },
             onRender() {
-              this.getComponents().forEach((comp) => { comp.addClick(); });
+              this.getComponents().forEach((comp) => {
+                comp.addClick();
+              });
             },
             render() {
               const content = this.getComponents().reduce((acc, item) => {
                 const rendered = item.render();
                 return acc + rendered;
-              }, '');
-              this.dispatch('render');
+              }, "");
+              this.dispatch("render");
               return `<ul id="${this.getId()}">${content}</ul>`;
-            }
+            },
           });
 
           const groupCmp = Collapse({
-            cls : '',
-            expanded : false,
-            headerComponent : CollapseHeader({
-              cls :
-                  'hover padding-x padding-y-small grey-lightest border-bottom text-small',
-              icon : '#ic_chevron_right_24px',
-              title : layertitle
+            cls: "",
+            expanded: false,
+            headerComponent: CollapseHeader({
+              cls: "hover padding-x padding-y-small grey-lightest border-bottom text-small",
+              icon: "#ic_chevron_right_24px",
+              title: layertitle,
             }),
             contentComponent,
-            collapseX : false
+            collapseX: false,
           });
           groups.push(groupCmp);
         }
       });
 
       let exportButton;
-      if (Object.keys(result).length > 0 && searchlistOptions.export &&
-          searchlistOptions.exportUrl) {
+      if (
+        Object.keys(result).length > 0 &&
+        searchlistOptions.export &&
+        searchlistOptions.exportUrl
+      ) {
         const roundButton = searchlistOptions.roundButton;
-        const buttonIcon = searchlistOptions.roundButtonIcon || '#fa-download';
-        const buttonText = searchlistOptions.exportButtonText || 'Export';
+        const buttonIcon = searchlistOptions.roundButtonIcon || "#fa-download";
+        const buttonText = searchlistOptions.exportButtonText || "Export";
         const exportFileName =
-            searchlistOptions.exportFilename || 'export.xlsx';
+          searchlistOptions.exportFilename || "export.xlsx";
         const exportExcludedFields =
-            searchlistOptions.exportExcludedFields || [];
+          searchlistOptions.exportExcludedFields || [];
         if (exportExcludedFields.length > 0) {
-          Object.keys(result).forEach(thisName => {
-            result[thisName].forEach(res => {
+          Object.keys(result).forEach((thisName) => {
+            result[thisName].forEach((res) => {
               const row = res;
-              exportExcludedFields.forEach(field => {
+              exportExcludedFields.forEach((field) => {
                 if (row[field]) {
                   delete row[field];
                 }
@@ -504,193 +555,202 @@ const Search = function Search(options = {}) {
         }
 
         exportButton = Button({
-          cls :
-              roundButton
-                  ? 'padding-small margin-bottom-smaller icon-smaller round light box-shadow o-tooltip margin-right-small'
-                  : 'export-button',
-          style : roundButton
-                      ? 'position:absolute; bottom:0.2rem; left:0.75rem'
-                      : 'position:absolute; bottom:0.75rem; left:0.75rem',
-          text : roundButton ? '' : buttonText,
-          tooltipText : roundButton ? buttonText : '',
-          icon : roundButton ? buttonIcon : '',
+          cls: roundButton
+            ? "padding-small margin-bottom-smaller icon-smaller round light box-shadow o-tooltip margin-right-small"
+            : "export-button",
+          style: roundButton
+            ? "position:absolute; bottom:0.2rem; left:0.75rem"
+            : "position:absolute; bottom:0.75rem; left:0.75rem",
+          text: roundButton ? "" : buttonText,
+          tooltipText: roundButton ? buttonText : "",
+          icon: roundButton ? buttonIcon : "",
           click() {
-            listExportHandler(searchlistOptions.exportUrl, result,
-                              exportFileName)
-                .catch((err) => { console.error(err); });
-          }
+            listExportHandler(
+              searchlistOptions.exportUrl,
+              result,
+              exportFileName,
+            ).catch((err) => {
+              console.error(err);
+            });
+          },
         });
       }
 
       const listcomponent = Component({
-        name : 'searchlist',
+        name: "searchlist",
         onInit() {
           this.addComponents(groups);
           if (exportButton) {
             this.addComponent(exportButton);
           }
         },
-        onAdd() { this.render(); },
+        onAdd() {
+          this.render();
+        },
         render() {
           const content = this.getComponents().reduce(
-              (acc, item) => acc + item.render(), '');
+            (acc, item) => acc + item.render(),
+            "",
+          );
           return `${content}`;
-        }
+        },
       });
       const searchlistTitle =
-          searchlistOptions.title || 'Sökresultat för "{{value}}"';
+        searchlistOptions.title || 'Sökresultat för "{{value}}"';
       infowindow.changeContent(
-          listcomponent, `${searchlistTitle.replace('{{value}}', searchVal)}`);
+        listcomponent,
+        `${searchlistTitle.replace("{{value}}", searchVal)}`,
+      );
     };
 
     function makeRequest(reqHandler, obj, opt, ignoreGroup = false) {
       const searchVal = obj.value;
-      let queryUrl = `${url}${url.indexOf('?') !== -1 ? '&' : '?'}${
-          queryParameterName}=${encodeURI(obj.value)}`;
+      let queryUrl = `${url}${url.indexOf("?") !== -1 ? "&" : "?"}${queryParameterName}=${encodeURI(obj.value)}`;
       if (includeSearchableLayers) {
         queryUrl += `&l=${viewer.getSearchableLayers(searchableDefault)}`;
       }
-      fetch(queryUrl).then(response => response.json()).then((data) => {
-        let list = [];
-        searchDb = {};
-        if (data.length) {
-          setSearchDb(data);
-          if (name && groupSuggestions && !ignoreGroup) {
-            list = groupToList(groupDb(searchDb));
-          } else {
-            list = dbToList(data);
+      fetch(queryUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          let list = [];
+          searchDb = {};
+          if (data.length) {
+            setSearchDb(data);
+            if (name && groupSuggestions && !ignoreGroup) {
+              list = groupToList(groupDb(searchDb));
+            } else {
+              list = dbToList(data);
+            }
           }
-        }
-        reqHandler(list, searchVal, opt);
-      });
+          reqHandler(list, searchVal, opt);
+        });
     }
 
-    input.addEventListener('keyup', (e) => {
+    input.addEventListener("keyup", (e) => {
       if (input.value.length >= minLength) {
         const keyCode = e.keyCode;
         if (keyCode === 13) {
           switch (searchlistPlacement) {
-          case 'floating':
-          case 'left':
-            makeRequest(infowindowHandler, input, {}, true);
-            clearAll();
-            break;
-          default:
-            makeRequest(handler, input);
+            case "floating":
+            case "left":
+              makeRequest(infowindowHandler, input, {}, true);
+              clearAll();
+              break;
+            default:
+              makeRequest(handler, input);
           }
         } else if (keyCode in keyCodes) {
           // empty
         } else {
           switch (autocompletePlacement) {
-          case 'floating':
-          case 'left':
-            makeRequest(infowindowHandler, input);
-            break;
-          default:
-            makeRequest(handler, input);
+            case "floating":
+            case "left":
+              makeRequest(infowindowHandler, input);
+              break;
+            default:
+              makeRequest(handler, input);
           }
         }
       } else {
         switch (searchlistPlacement) {
-        case 'floating':
-        case 'left':
-          infowindowHandler([], '');
-          infowindow.close();
-          break;
-        default:
-          break;
+          case "floating":
+          case "left":
+            infowindowHandler([], "");
+            infowindow.close();
+            break;
+          default:
+            break;
         }
       }
     });
   }
 
   return Component({
-    name : 'search',
+    name: "search",
     onAdd(evt) {
       viewer = evt.target;
-      featureInfo = viewer.getControlByName('featureInfo');
+      featureInfo = viewer.getControlByName("featureInfo");
       name = options.searchAttribute;
-      if (!northing)
-        northing = undefined;
-      if (!easting)
-        easting = undefined;
+      if (!northing) northing = undefined;
+      if (!easting) easting = undefined;
       /**
      idAttribute in combination with layerNameAttribute
      must be defined if search result should be selected
    */
       idAttribute = options.idAttribute;
-      if (!layerNameAttribute)
-        layerNameAttribute = undefined;
-      if (!layerName)
-        layerName = undefined;
-      if (!title)
-        title = '';
-      if (!titleAttribute)
-        titleAttribute = undefined;
-      if (!contentAttribute)
-        contentAttribute = undefined;
-      groupSuggestions =
-          Object.prototype.hasOwnProperty.call(options, 'groupSuggestions')
-              ? options.groupSuggestions
-              : false;
+      if (!layerNameAttribute) layerNameAttribute = undefined;
+      if (!layerName) layerName = undefined;
+      if (!title) title = "";
+      if (!titleAttribute) titleAttribute = undefined;
+      if (!contentAttribute) contentAttribute = undefined;
+      groupSuggestions = Object.prototype.hasOwnProperty.call(
+        options,
+        "groupSuggestions",
+      )
+        ? options.groupSuggestions
+        : false;
       includeSearchableLayers = Object.prototype.hasOwnProperty.call(
-                                    options, 'includeSearchableLayers')
-                                    ? options.includeSearchableLayers
-                                    : false;
-      searchableDefault =
-          Object.prototype.hasOwnProperty.call(options, 'searchableDefault')
-              ? options.searchableDefault
-              : false;
+        options,
+        "includeSearchableLayers",
+      )
+        ? options.includeSearchableLayers
+        : false;
+      searchableDefault = Object.prototype.hasOwnProperty.call(
+        options,
+        "searchableDefault",
+      )
+        ? options.searchableDefault
+        : false;
       if (!maxZoomLevel)
         maxZoomLevel =
-            viewer.getResolutions().length - 2 || viewer.getResolutions();
-      if (!limit)
-        limit = 9;
-      if (!minLength)
-        minLength = 4;
+          viewer.getResolutions().length - 2 || viewer.getResolutions();
+      if (!limit) limit = 9;
+      if (!minLength) minLength = 4;
       projectionCode = viewer.getProjectionCode();
       map = viewer.getMap();
 
-      this.addComponents(
-          [ searchButton, closeButton, containerElement, wrapperElement ]);
+      this.addComponents([
+        searchButton,
+        closeButton,
+        containerElement,
+        wrapperElement,
+      ]);
       this.render();
     },
     onInit() {
-      if (!hintText)
-        hintText = 'Sök...';
+      if (!hintText) hintText = "Sök...";
       searchButton = Button({
-        cls : 'o-search-button no-shrink no-grow compact icon-small',
-        icon : '#ic_search_24px',
-        iconCls : 'grey'
+        cls: "o-search-button no-shrink no-grow compact icon-small",
+        icon: "#ic_search_24px",
+        iconCls: "grey",
       });
 
       closeButton = Button({
-        cls : 'o-search-button-close no-shrink no-grow compact icon-small',
-        click() { onClearSearch(); },
-        icon : '#ic_close_24px',
-        iconCls : 'grey'
+        cls: "o-search-button-close no-shrink no-grow compact icon-small",
+        click() {
+          onClearSearch();
+        },
+        icon: "#ic_close_24px",
+        iconCls: "grey",
       });
 
       containerElement = El({
-        cls :
-            'o-search o-search-false flex row align-center padding-right-small',
-        innerHTML :
-            `<input id="hjl" class="o-search-field form-control text-grey-darker" type="text" placeholder="${
-                hintText}"></input>`
+        cls: "o-search o-search-false flex row align-center padding-right-small",
+        innerHTML: `<input id="hjl" class="o-search-field form-control text-grey-darker" type="text" placeholder="${hintText}"></input>`,
       });
 
       wrapperElement = El({
-        cls :
-            'o-search-wrapper absolute top-center rounded-larger box-shadow bg-white',
-        style : {'flex-wrap' : 'wrap', overflow : 'visible'}
+        cls: "o-search-wrapper absolute top-center rounded-larger box-shadow bg-white",
+        style: { "flex-wrap": "wrap", overflow: "visible" },
       });
     },
     hide() {
-      document.getElementById(wrapperElement.getId()).classList.add('hidden');
+      document.getElementById(wrapperElement.getId()).classList.add("hidden");
     },
     unhide() {
-      document.getElementById(wrapperElement.getId())
-          .classList.remove('hidden');
+      document
+        .getElementById(wrapperElement.getId())
+        .classList.remove("hidden");
     },
     render() {
       const mapEl = document.getElementById(viewer.getMain().getId());
@@ -714,38 +774,44 @@ const Search = function Search(options = {}) {
       initAutocomplete();
       bindUIActions();
 
-      if (autocompletePlacement === 'floating' ||
-          searchlistPlacement === 'floating') {
+      if (
+        autocompletePlacement === "floating" ||
+        searchlistPlacement === "floating"
+      ) {
         infowindow = Infowindow({
           viewer,
-          type : 'floating',
-          contentComponent : El({
-            tagName : 'div',
-            cls : 'padding-y-small overflow-auto text-small',
-            style : (searchlistOptions.export && searchlistOptions.exportUrl)
-                        ? 'margin-bottom:2.7rem'
-                        : ''
-          })
+          type: "floating",
+          contentComponent: El({
+            tagName: "div",
+            cls: "padding-y-small overflow-auto text-small",
+            style:
+              searchlistOptions.export && searchlistOptions.exportUrl
+                ? "margin-bottom:2.7rem"
+                : "",
+          }),
         });
         this.addComponent(infowindow);
-      } else if (autocompletePlacement === 'left' ||
-                 searchlistPlacement === 'left') {
+      } else if (
+        autocompletePlacement === "left" ||
+        searchlistPlacement === "left"
+      ) {
         infowindow = Infowindow({
           viewer,
-          type : 'left',
-          contentComponent : El({
-            tagName : 'div',
-            cls : 'padding-y-small overflow-auto text-small',
-            style : (searchlistOptions.export && searchlistOptions.exportUrl)
-                        ? 'margin-bottom:2.7rem'
-                        : ''
-          })
+          type: "left",
+          contentComponent: El({
+            tagName: "div",
+            cls: "padding-y-small overflow-auto text-small",
+            style:
+              searchlistOptions.export && searchlistOptions.exportUrl
+                ? "margin-bottom:2.7rem"
+                : "",
+          }),
         });
         this.addComponent(infowindow);
       }
 
-      this.dispatch('render');
-    }
+      this.dispatch("render");
+    },
   });
 };
 
